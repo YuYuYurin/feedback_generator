@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ふりかえり文章生成</title>
+    <style>
+        body {
+            font-family: HiraginoSans-W0, Hiragino Sans;
+            margin: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        textarea {
+            height: 100px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>ふりかえり文章生成</h1>
+    
+    <form id="feedbackForm">
+        <!-- Deine bestehenden Auswahlfelder -->
+        <div class="section">
+            <label for="languageSkills">言語スキル (選択してください):</label>
+            <select id="languageSkills" name="languageSkills" multiple>
+                <option value="語彙">語彙</option>
+                <option value="発音">発音</option>
+                <option value="読解">読解</option>
+                <option value="リスニング">リスニング</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <label for="classAttitude">授業態度 (選択してください):</label>
+            <select id="classAttitude" name="classAttitude" multiple>
+                <option value="集中力">集中力</option>
+                <option value="積極性">積極性</option>
+                <option value="努力">努力</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <label for="emotions">感情 (選択してください):</label>
+            <select id="emotions" name="emotions" multiple>
+                <option value="自信">自信</option>
+                <option value="モチベーション">モチベーション</option>
+                <option value="楽しさ">楽しさ</option>
+                <option value="好奇心">好奇心</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <label for="praiseItems">褒めたい事柄 (選択してください):</label>
+            <select id="praiseItems" name="praiseItems" multiple>
+                <option value="物語">物語</option>
+                <option value="練習">練習</option>
+                <option value="単語">単語</option>
+                <option value="会話">会話</option>
+                <option value="本読み">本読み</option>
+                <option value="話を聞く">話を聞く</option>
+            </select>
+        </div>
+        
+        <div class="section">
+            <label for="lessonTheme">授業テーマ:</label>
+            <input type="text" id="lessonTheme" name="lessonTheme">
+        </div>
+        
+        <div class="section">
+            <label for="episode">文章に入れたいエピソードなど:</label>
+            <textarea id="episode" name="episode"></textarea>
+        </div>
+        
+        <button type="button" onclick="generateFeedback()">文章を生成する</button>
+    </form>
+    
+    <div id="feedbackResult" class="section">
+        <h2>生成された文章:</h2>
+        <p id="feedbackText"></p>
+        <!-- Den neuen Button unter den generierten Text platzieren -->
+        <button type="button" onclick="regenerateFeedback()">同じキーワードでもう一度文章を生成する</button>
+    </div>
+    
+    <script>
+        let lastKeywords = null;
+
+        function generateFeedback() {
+            const languageSkills = Array.from(document.getElementById('languageSkills').selectedOptions).map(option => option.value);
+            const classAttitude = Array.from(document.getElementById('classAttitude').selectedOptions).map(option => option.value);
+            const emotions = Array.from(document.getElementById('emotions').selectedOptions).map(option => option.value);
+            const praiseItems = Array.from(document.getElementById('praiseItems').selectedOptions).map(option => option.value);
+            const lessonTheme = document.getElementById('lessonTheme').value;
+            const episode = document.getElementById('episode').value;
+            
+            const keywords = [
+                {"言語スキル": languageSkills},
+                {"授業態度": classAttitude},
+                {"感情": emotions},
+                {"褒めたい事柄": praiseItems},
+                {"授業テーマ": lessonTheme},
+                {"文章に入れたいエピソードなど": episode}
+            ];
+            
+            lastKeywords = keywords;  // Speichert die letzten Schlüsselwörter
+            
+            fetchFeedback(keywords);
+        }
+
+        function regenerateFeedback() {
+            if (lastKeywords) {
+                fetchFeedback(lastKeywords);
+            } else {
+                alert("Bitte zuerst die ursprüngliche Anfrage ausführen.");
+            }
+        }
+
+        function fetchFeedback(keywords) {
+            fetch('/generate_feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({keywords: keywords})
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ersetzt den alten Text durch den neuen
+                document.getElementById('feedbackText').textContent = data.feedback;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
